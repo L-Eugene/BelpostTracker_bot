@@ -36,6 +36,13 @@ module Belpost
       tracks << track
     end
 
+    def list
+      <<~TEXT
+        <b>enabled:</b> #{enabled? ? 'yes' : 'no'}
+        #{tracks.pluck(:number).join("\n")}
+      TEXT
+    end
+
     private
 
     def watching?(track)

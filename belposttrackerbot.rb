@@ -72,4 +72,8 @@ class BelpostTrackerBot
     chat.send_text 'Invalid track number'
     log.error $ERROR_INFO
   end
+
+  def cmd_list(_)
+    chat.send_text chat.list, 'HTML'
+  end
 end
