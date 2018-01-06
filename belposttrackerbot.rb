@@ -49,6 +49,13 @@ class BelpostTrackerBot
 
   private
 
+  HELP_MESSAGE = <<~TEXT
+    */help* - print this help message
+    */list* - list tracknumbers watched in this chat
+    */add* _track_ - add tracknumber to watchlist
+    */delete* _track_ - delete tracknumber from watchlist
+  TEXT
+
   def method_from_message(text)
     meth = (text || '').downcase
     [%r{\@.*$}, %r{\s.*$}, %r{^/}].each { |x| meth.gsub!(x, '') }
@@ -73,7 +80,25 @@ class BelpostTrackerBot
     log.error $ERROR_INFO
   end
 
+  def cmd_delete(text)
+    num = text.gsub(%r{/delete\s*}, '')
+    track = Belpost::Track.find_by(number: num)
+
+    chat.unwatch track
+    chat.send_text 'Removed track number from watch list'
+  rescue Belpost::Error
+    chat.send_text $ERROR_INFO.to_chat if $ERROR_INFO.respond_to? 'to_chat'
+    log.error $ERROR_INFO
+  rescue StandardError
+    chat.send_text 'Invalid track number'
+    log.error $ERROR_INFO
+  end
+
   def cmd_list(_)
     chat.send_text chat.list, 'HTML'
+  end
+
+  def cmd_help(_)
+    chat.send_text HELP_MESSAGE
   end
 end

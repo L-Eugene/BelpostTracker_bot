@@ -36,6 +36,12 @@ module Belpost
       tracks << track
     end
 
+    def unwatch(track)
+      raise Belpost::Error, 'This number is not watched' unless watching? track
+
+      tracks.delete track
+    end
+
     def list
       <<~TEXT
         <b>enabled:</b> #{enabled? ? 'yes' : 'no'}
