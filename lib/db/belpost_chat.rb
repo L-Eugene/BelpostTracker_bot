@@ -1,5 +1,7 @@
 # frozen_string_literal: true 
 
+require 'English'
+
 module Belpost
 
   class Chat < BelpostBase
@@ -19,6 +21,7 @@ module Belpost
     end
 
     def send_text(text, parse_mode = 'Markdown')
+      p text
       telegram.api.send_message(
         chat_id: chat_id,
         parse_mode: parse_mode,
@@ -61,7 +64,7 @@ module Belpost
     end
 
     def print_error(e)
-      #
+      p e
     end
   end
 end

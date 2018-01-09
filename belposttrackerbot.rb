@@ -3,6 +3,7 @@
 #
 require 'telegram/bot'
 require 'singleton'
+require 'yaml'
 
 module Belpost
   class Config
@@ -45,6 +46,12 @@ class BelpostTrackerBot
     meth = method_from_message(message.text)
 
     send(meth, message.text) if respond_to? meth.to_sym, true
+  end
+
+  def scan
+    Belpost::Track.find_each do |t| 
+      t.refresh if t.watched?
+    end
   end
 
   private
