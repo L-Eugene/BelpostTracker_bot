@@ -1,11 +1,11 @@
-#
-# file: belposttrackerbot.rb 
-#
+# frozen_string_literal: true
+
 require 'telegram/bot'
 require 'singleton'
 require 'yaml'
 
 module Belpost
+  # Configuration singleton
   class Config
     include Singleton
 
@@ -27,7 +27,8 @@ require 'db/belpost_model'
 require 'log/belpost_logger'
 require 'belpost_classes'
 
-class BelpostTrackerBot 
+# Main Bot Class
+class BelpostTrackerBot
   attr_reader :client, :log, :chat
 
   def initialize
@@ -49,9 +50,7 @@ class BelpostTrackerBot
   end
 
   def scan
-    Belpost::Track.find_each do |t| 
-      t.refresh if t.watched?
-    end
+    Belpost::Track.find_each { |t| t.refresh if t.watched? }
   end
 
   private
@@ -79,12 +78,10 @@ class BelpostTrackerBot
 
     chat.add track
     chat.send_text 'Added track to this chat list'
-  rescue Belpost::Error
-    chat.send_text $ERROR_INFO.to_chat if $ERROR_INFO.respond_to? 'to_chat'
-    log.error $ERROR_INFO
   rescue StandardError
-    chat.send_text 'Invalid track number'
     log.error $ERROR_INFO
+    respond = $ERROR_INFO.respond_to? 'to_chat'
+    chat.send_text respond ? $ERROR_INFO.to_chat : 'Invalid track number'
   end
 
   def cmd_delete(text)
@@ -93,12 +90,10 @@ class BelpostTrackerBot
 
     chat.unwatch track
     chat.send_text 'Removed track number from watch list'
-  rescue Belpost::Error
-    chat.send_text $ERROR_INFO.to_chat if $ERROR_INFO.respond_to? 'to_chat'
-    log.error $ERROR_INFO
   rescue StandardError
-    chat.send_text 'Invalid track number'
     log.error $ERROR_INFO
+    respond = $ERROR_INFO.respond_to? 'to_chat'
+    chat.send_text respond ? $ERROR_INFO.to_chat : 'Invalid track number'
   end
 
   def cmd_list(_)

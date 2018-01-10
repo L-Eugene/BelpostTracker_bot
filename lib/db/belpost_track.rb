@@ -1,8 +1,10 @@
+# frozen_string_literal: true
+
 require 'nokogiri'
 require 'digest'
 
 module Belpost
-
+  # Track number
   class Track < BelpostBase
     has_many :links
     has_many :chats, through: :links
@@ -18,15 +20,14 @@ module Belpost
       msg = "<b>#{number}</b>\n#{parse Faraday.get(url).body}"
       digest = Digest::MD5.hexdigest msg
 
+      return if md5 == digest
 
-      if md5 != digest
-        self.md5 = digest
-        self.message = msg
-        chats.each do |c| 
-          c.send_text(msg, 'HTML') if c.enabled?
-        end
-        save
+      self.md5 = digest
+      self.message = msg
+      chats.each do |c|
+        c.send_text(msg, 'HTML') if c.enabled?
       end
+      save
     end
 
     private
@@ -36,8 +37,8 @@ module Belpost
 
       Nokogiri::HTML(html).css('#Panel2 table tr').each do |tr|
         next if (date = tr.css('td[1]').text).empty?
-        status = cleanup tr.css('td[2]').text
-        place = cleanup tr.css('td[3]').text, true
+        status = cleanup tr.css('td[2]')
+        place = cleanup tr.css('td[3]'), true
         date.gsub!(%r{(\d{2})\.(\d{2})\.(\d{4})}, '\3-\2-\1')
         result << "<b>#{date}</b>: #{status} <i>#{place}</i>"
       end
@@ -45,11 +46,9 @@ module Belpost
       result.join "\n"
     end
 
-    private
-
-    def cleanup(text, brackets = false)
-      result = text.gsub(/^\s*/, '').gsub(/\s*$/, '')
-      (brackets && !result.empty?) ? "(#{result})" : result
+    def cleanup(object, brackets = false)
+      result = object.text.gsub(%r{^\s*}, '').gsub(%r{\s*$}, '')
+      brackets && !result.empty? ? "(#{result})" : result
     end
   end
 end

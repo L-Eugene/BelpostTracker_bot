@@ -12,6 +12,7 @@ module Belpost
     end
   end
 
+  # Exception with message, sent to chat
   class Error < StandardError
     attr_reader :to_chat
 

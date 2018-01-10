@@ -1,9 +1,9 @@
-# frozen_string_literal: true 
+# frozen_string_literal: true
 
 require 'English'
 
 module Belpost
-
+  # Chat ckass
   class Chat < BelpostBase
     has_many :links
     has_many :tracks, through: :links
