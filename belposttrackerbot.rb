@@ -64,7 +64,7 @@ class BelpostTrackerBot
   HELP_MESSAGE = <<~TEXT
     */help* - print this help message
     */list* - list tracknumbers watched in this chat
-    */add* _track_ - add tracknumber to watchlist
+    */add* _track_ _comment_ - add tracknumber to watchlist
     */delete* _track_ - delete tracknumber from watchlist
   TEXT
 
