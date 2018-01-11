@@ -50,7 +50,13 @@ class BelpostTrackerBot
   end
 
   def scan
-    Belpost::Track.find_each { |t| t.refresh if t.watched? }
+    return log.warn 'Previous scan is still running.' if scanning?
+    scan_flag
+
+    update_tracks
+    drop_old_tracks
+
+    scan_unflag
   end
 
   private
@@ -61,6 +67,27 @@ class BelpostTrackerBot
     */add* _track_ - add tracknumber to watchlist
     */delete* _track_ - delete tracknumber from watchlist
   TEXT
+
+  def scanning?
+    File.exist? Belpost::Config.instance.options['flag']
+  end
+
+  def scan_flag
+    log.info 'Starting scan'
+    FileUtils.touch Belpost::Config.instance.options['flag']
+  end
+
+  def scan_unflag
+    FileUtils.rm Belpost::Config.instance.options['flag']
+    log.info 'Finish scan'
+  end
+
+  def update_tracks
+    Belpost::Track.find_each do |t|
+      log.info "Scanning #{t.number}"
+      t.refresh if t.watched?
+    end
+  end
 
   def method_from_message(text)
     meth = (text || '').downcase
@@ -73,10 +100,10 @@ class BelpostTrackerBot
   end
 
   def cmd_add(text)
-    num = text.gsub(%r{/add\s*}, '')
-    track = Belpost::Track.find_or_create_by(number: num)
+    num = text.gsub(%r{/add\s*}, '').split(%r{\s})
+    track = Belpost::Track.find_or_create_by(number: num.shift)
 
-    chat.add track
+    chat.add track, num.join(' ')
     chat.send_text 'Added track to this chat list'
   rescue StandardError
     log.error $ERROR_INFO
@@ -102,5 +129,19 @@ class BelpostTrackerBot
 
   def cmd_help(_)
     chat.send_text HELP_MESSAGE
+  end
+
+  def drop_old_tracks
+    cond = 'updated_at < DATE_SUB(NOW(), INTERVAL 4 MONTH)'
+    Belpost::Track.where(cond).find_each do |t|
+      t.chats.each do |c|
+        msg = <<~MSG
+          #{t.number} was not updated for too long, removing it from watchlist
+          If you still want to watch it, add it again with /add #{t.number}
+        MSG
+        c.send_text msg if c.enabled?
+      end
+      t.destroy
+    end
   end
 end

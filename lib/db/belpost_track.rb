@@ -17,15 +17,14 @@ module Belpost
 
     def refresh
       url = "https://webservices.belpost.by/searchRu/#{number}"
-      msg = "<b>#{number}</b>\n#{parse Faraday.get(url).body}"
-      digest = Digest::MD5.hexdigest msg
+      self.message = "<b>#{number}</b>\n#{parse Faraday.get(url).body}"
+      self.md5 = Digest::MD5.hexdigest message
 
-      return if md5 == digest
+      return unless changed?
 
-      self.md5 = digest
-      self.message = msg
-      chats.each do |c|
-        c.send_text(msg, 'HTML') if c.enabled?
+      chats.where(enabled: true).each do |c|
+        log.info " +++ Sending to #{c.chat_id}"
+        c.send_text(message, 'HTML')
       end
       save
     end
@@ -43,12 +42,16 @@ module Belpost
         result << "<b>#{date}</b>: #{status} <i>#{place}</i>"
       end
 
-      result.join "\n"
+      result.sort.join "\n"
     end
 
     def cleanup(object, brackets = false)
       result = object.text.gsub(%r{^\s*}, '').gsub(%r{\s*$}, '')
       brackets && !result.empty? ? "(#{result})" : result
+    end
+
+    def log
+      Belpost::Log.instance
     end
   end
 end

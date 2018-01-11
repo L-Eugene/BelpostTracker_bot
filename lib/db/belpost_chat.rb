@@ -21,7 +21,6 @@ module Belpost
     end
 
     def send_text(text, parse_mode = 'Markdown')
-      p text
       telegram.api.send_message(
         chat_id: chat_id,
         parse_mode: parse_mode,
@@ -32,11 +31,12 @@ module Belpost
       print_error $ERROR_INFO
     end
 
-    def add(track)
+    def add(track, comment = '')
       raise Belpost::Error, 'Already tracking this number' if watching? track
       raise Belpost::Error, 'Tracknumber limit reached' if full?
 
       tracks << track
+      links.where(track_id: track.id, chat_id: id).take.update_attribute(:comment, comment)
     end
 
     def unwatch(track)
@@ -46,9 +46,13 @@ module Belpost
     end
 
     def list
+      list = tracks.map do |t|
+        s = "#{t.number}"
+        "#{s} <i>#{links.where(track_id: t.id, chat_id: id).take.comment}</i>"
+      end
       <<~TEXT
         <b>enabled:</b> #{enabled? ? 'yes' : 'no'}
-        #{tracks.pluck(:number).join("\n")}
+        #{list.join("\n")}
       TEXT
     end
 
@@ -63,8 +67,12 @@ module Belpost
       Belpost::Tlg.instance
     end
 
+    def log
+      Belpost::Log.instance
+    end
+
     def print_error(e)
-      p e
+      log.error e.message
     end
   end
 end
