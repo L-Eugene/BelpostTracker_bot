@@ -36,7 +36,9 @@ module Belpost
       raise Belpost::Error, 'Tracknumber limit reached' if full?
 
       tracks << track
-      links.where(track_id: track.id, chat_id: id).take.update_attribute(:comment, comment)
+      links.where(track_id: track.id, chat_id: id)
+           .take
+           .update_attribute(:comment, comment)
     end
 
     def unwatch(track)
@@ -47,7 +49,7 @@ module Belpost
 
     def list
       list = tracks.map do |t|
-        s = "#{t.number}"
+        s = t.number
         "#{s} <i>#{links.where(track_id: t.id, chat_id: id).take.comment}</i>"
       end
       <<~TEXT

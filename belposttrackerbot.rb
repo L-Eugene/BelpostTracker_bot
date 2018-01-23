@@ -50,7 +50,7 @@ class BelpostTrackerBot
   end
 
   def scan
-    return log.warn 'Previous scan is still running.' if scanning?
+    return log.error 'Previous scan is still running.' if scanning?
     scan_flag
 
     update_tracks
@@ -106,9 +106,7 @@ class BelpostTrackerBot
     chat.add track, num.join(' ')
     chat.send_text 'Added track to this chat list'
   rescue StandardError
-    log.error $ERROR_INFO
-    respond = $ERROR_INFO.respond_to? 'to_chat'
-    chat.send_text respond ? $ERROR_INFO.to_chat : 'Invalid track number'
+    log_exception $ERROR_INFO
   end
 
   def cmd_delete(text)
@@ -118,9 +116,7 @@ class BelpostTrackerBot
     chat.unwatch track
     chat.send_text 'Removed track number from watch list'
   rescue StandardError
-    log.error $ERROR_INFO
-    respond = $ERROR_INFO.respond_to? 'to_chat'
-    chat.send_text respond ? $ERROR_INFO.to_chat : 'Invalid track number'
+    log_exception $ERROR_INFO
   end
 
   def cmd_list(_)
@@ -129,6 +125,12 @@ class BelpostTrackerBot
 
   def cmd_help(_)
     chat.send_text HELP_MESSAGE
+  end
+
+  def log_exception(error)
+    log.error error
+    respond = error.respond_to? 'to_chat'
+    chat.send_text respond ? error.to_chat : 'Invalid track number'
   end
 
   def drop_old_tracks

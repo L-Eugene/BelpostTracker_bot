@@ -16,9 +16,8 @@ module Belpost
     end
 
     def refresh
-      url = "https://webservices.belpost.by/searchRu/#{number}"
-      self.message = "<b>#{number}</b>\n#{parse Faraday.get(url).body}"
-      self.md5 = Digest::MD5.hexdigest message
+      load_message
+      calc_md5
 
       return unless changed?
 
@@ -30,6 +29,15 @@ module Belpost
     end
 
     private
+
+    def load_message
+      url = "https://webservices.belpost.by/searchRu/#{number}"
+      self.message = "<b>#{number}</b>\n#{parse Faraday.get(url).body}"
+    end
+
+    def calc_md5
+      self.md5 = Digest::MD5.hexdigest message
+    end
 
     def parse(html)
       result = []
