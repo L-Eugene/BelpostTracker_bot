@@ -50,13 +50,12 @@ class BelpostTrackerBot
   end
 
   def scan
-    return log.error 'Previous scan is still running.' if scanning?
-    scan_flag
+    log.info 'Starting scan'
 
     update_tracks
     drop_old_tracks
 
-    scan_unflag
+    log.info 'Finish scan'
   end
 
   private
@@ -67,20 +66,6 @@ class BelpostTrackerBot
     */add* _track_ _comment_ - add tracknumber to watchlist
     */delete* _track_ - delete tracknumber from watchlist
   TEXT
-
-  def scanning?
-    File.exist? Belpost::Config.instance.options['flag']
-  end
-
-  def scan_flag
-    log.info 'Starting scan'
-    FileUtils.touch Belpost::Config.instance.options['flag']
-  end
-
-  def scan_unflag
-    FileUtils.rm Belpost::Config.instance.options['flag']
-    log.info 'Finish scan'
-  end
 
   def update_tracks
     Belpost::Track.find_each do |t|
