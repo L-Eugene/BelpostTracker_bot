@@ -20,12 +20,13 @@ module Belpost
       tracks.size >= TRACK_LIMIT
     end
 
-    def send_text(text, parse_mode = 'Markdown')
+    def send_text(text, parse_mode = 'Markdown', kbd = nil)
       telegram.api.send_message(
         chat_id: chat_id,
         parse_mode: parse_mode,
         disable_web_page_preview: true,
-        text: text
+        text: text,
+        reply_markup: kbd
       )
     rescue StandardError
       print_error $ERROR_INFO
@@ -47,18 +48,23 @@ module Belpost
       tracks.delete track
     end
 
-    def list
-      list = tracks.map do |t|
-        s = t.number
-        "#{s} <i>#{links.where(track_id: t.id, chat_id: id).take.comment}</i>"
-      end
-      <<~TEXT
-        <b>enabled:</b> #{enabled? ? 'yes' : 'no'}
-        #{list.join("\n")}
-      TEXT
+    def list_keyboard
+      kbd = Telegram::Bot::Types::InlineKeyboardMarkup.new
+      kbd.inline_keyboard = tracks.map { |t| list_button(t) }
+      kbd
+    end
+
+    def status
+      "<b>Status</b>: #{enabled? ? 'enabled' : 'disabled'}"
     end
 
     private
+
+    def list_button(t)
+      comment = links.where(track_id: t.id, chat_id: id).take.comment
+      comment = "(#{comment.slice(0, 7)})" unless comment.empty?
+      [{ text: "#{t.number} #{comment}", callback_data: "show #{t.number}" }]
+    end
 
     def watching?(track)
       return false if track.nil?

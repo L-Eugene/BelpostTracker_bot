@@ -36,17 +36,22 @@ class BelpostTrackerBot
     @log = Belpost::Log.instance
   end
 
-  def update(data)
-    update = Telegram::Bot::Types::Update.new(data)
-    message = update.message
-
-    return if message.nil?
-
+  def update_message(message)
     @chat = Belpost::Chat.find_or_create_by(chat_id: message.chat.id)
 
     meth = method_from_message(message.text)
-
     send(meth, message.text) if respond_to? meth.to_sym, true
+  end
+
+  def update_cq(cq)
+    log.debug "Callback_query: #{cq.data} #{cq.message.chat.id}"
+  end
+
+  def update(data)
+    update = Telegram::Bot::Types::Update.new(data)
+
+    update_message update.message unless update.message.nil?
+    update_cq update.callback_query unless update.callback_query.nil?
   end
 
   def scan
@@ -105,7 +110,7 @@ class BelpostTrackerBot
   end
 
   def cmd_list(_)
-    chat.send_text chat.list, 'HTML'
+    chat.send_text chat.status, 'HTML', chat.list_keyboard
   end
 
   def cmd_help(_)
@@ -122,7 +127,7 @@ class BelpostTrackerBot
     cond = 'updated_at < DATE_SUB(NOW(), INTERVAL 4 MONTH)'
     Belpost::Track.where(cond).find_each do |t|
       t.chats.each do |c|
-        msg = <<~MSG
+        msg = <<-MSG
           #{t.number} was not updated for too long, removing it from watchlist
           If you still want to watch it, add it again with /add #{t.number}
         MSG
