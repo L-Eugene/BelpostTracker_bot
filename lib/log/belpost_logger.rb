@@ -2,6 +2,7 @@
 
 require 'singleton'
 
+# Belpost module
 module Belpost
   # Logger singleton
   class Log < Logger
@@ -18,5 +19,10 @@ module Belpost
         "[#{date_format}] #{severity}: #{msg}\n"
       end
     end
+  end
+
+  # Get instance of Logger
+  def self.log
+    Belpost::Log.instance
   end
 end

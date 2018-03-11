@@ -10,7 +10,7 @@ module Belpost
     self.abstract_class = true
 
     establish_connection(Belpost::Config.instance.options['database'])
-    @logger = Belpost::Log.instance
+    @logger = Belpost.log
   end
 
   ActiveSupport::LogSubscriber.colorize_logging = false

@@ -22,7 +22,7 @@ module Belpost
       return unless changed?
 
       chats.where(enabled: true).each do |c|
-        log.info " +++ Sending to #{c.chat_id}"
+        Belpost.log.info " +++ Sending to #{c.chat_id}"
         c.send_text(message, 'HTML')
       end
       save
@@ -40,26 +40,18 @@ module Belpost
     end
 
     def parse(html)
-      result = []
-
-      Nokogiri::HTML(html).css('#Panel2 table tr').each do |tr|
+      Nokogiri::HTML(html).css('#Panel2 table tr').map do |tr|
         next if (date = tr.css('td[1]').text).empty?
         status = cleanup tr.css('td[2]')
         place = cleanup tr.css('td[3]'), true
         date.gsub!(%r{(\d{2})\.(\d{2})\.(\d{4})}, '\3-\2-\1')
-        result << "<b>#{date}</b>: #{status} <i>#{place}</i>"
-      end
-
-      result.sort.join "\n"
+        "<b>#{date}</b>: #{status} <i>#{place}</i>"
+      end.sort.join "\n"
     end
 
     def cleanup(object, brackets = false)
       result = object.text.gsub(%r{^\s*}, '').gsub(%r{\s*$}, '')
       brackets && !result.empty? ? "(#{result})" : result
-    end
-
-    def log
-      Belpost::Log.instance
     end
   end
 end

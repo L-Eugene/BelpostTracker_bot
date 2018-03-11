@@ -21,7 +21,7 @@ module Belpost
     end
 
     def send_text(text, parse_mode = 'Markdown', kbd = nil)
-      telegram.api.send_message(
+      Belpost.telegram.api.send_message(
         chat_id: chat_id,
         parse_mode: parse_mode,
         disable_web_page_preview: true,
@@ -62,7 +62,7 @@ module Belpost
 
     def list_button(t)
       comment = links.where(track_id: t.id, chat_id: id).take.comment
-      comment = "(#{comment.slice(0, 7)})" unless comment.empty?
+      comment = "(#{comment.slice(0, 15)})" unless comment.empty?
       [{ text: "#{t.number} #{comment}", callback_data: "show #{t.number}" }]
     end
 
@@ -71,16 +71,8 @@ module Belpost
       tracks.any? { |t| t.number == track.number }
     end
 
-    def telegram
-      Belpost::Tlg.instance
-    end
-
-    def log
-      Belpost::Log.instance
-    end
-
     def print_error(e)
-      log.error e.message
+      Belpost.log.error e.message
       update!(enabled: false) if e.message.include? 'was blocked by the user'
     end
   end

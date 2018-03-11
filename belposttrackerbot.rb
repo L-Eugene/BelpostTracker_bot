@@ -29,11 +29,10 @@ require 'belpost_classes'
 
 # Main Bot Class
 class BelpostTrackerBot
-  attr_reader :client, :log, :chat
+  attr_reader :client, :chat
 
   def initialize
-    @client = Belpost::Tlg.instance
-    @log = Belpost::Log.instance
+    @client = Belpost.telegram
   end
 
   def update_message(message)
@@ -44,7 +43,7 @@ class BelpostTrackerBot
   end
 
   def update_cq(cq)
-    log.debug "Callback_query: #{cq.data} #{cq.message.chat.id}"
+    Belpost.log.debug "Callback_query: #{cq.data} #{cq.message.chat.id}"
   end
 
   def update(data)
@@ -55,12 +54,12 @@ class BelpostTrackerBot
   end
 
   def scan
-    log.info 'Starting scan'
+    Belpost.log.info 'Starting scan'
 
     update_tracks
     drop_old_tracks
 
-    log.info 'Finish scan'
+    Belpost.log.info 'Finish scan'
   end
 
   private
@@ -74,7 +73,7 @@ class BelpostTrackerBot
 
   def update_tracks
     Belpost::Track.find_each do |t|
-      log.info "Scanning #{t.number}"
+      Belpost.log.info "Scanning #{t.number}"
       t.refresh if t.watched?
     end
   end
@@ -83,8 +82,8 @@ class BelpostTrackerBot
     meth = (text || '').downcase
     [%r{\@.*$}, %r{\s.*$}, %r{^/}].each { |x| meth.gsub!(x, '') }
 
-    log.info "#{meth} command from #{chat.chat_id}"
-    log.debug "Full command is #{text}"
+    Belpost.log.info "#{meth} command from #{chat.chat_id}"
+    Belpost.log.debug "Full command is #{text}"
 
     "cmd_#{meth}"
   end
@@ -118,7 +117,7 @@ class BelpostTrackerBot
   end
 
   def log_exception(error)
-    log.error error
+    Belpost.log.error error
     respond = error.respond_to? 'to_chat'
     chat.send_text respond ? error.to_chat : 'Invalid track number'
   end
@@ -127,7 +126,7 @@ class BelpostTrackerBot
     cond = 'updated_at < DATE_SUB(NOW(), INTERVAL 4 MONTH)'
     Belpost::Track.where(cond).find_each do |t|
       t.chats.each do |c|
-        msg = <<-MSG
+        msg = <<~MSG
           #{t.number} was not updated for too long, removing it from watchlist
           If you still want to watch it, add it again with /add #{t.number}
         MSG

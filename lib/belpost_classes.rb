@@ -2,6 +2,7 @@
 
 require 'singleton'
 
+# Belpost module
 module Belpost
   # Telegram class
   class Tlg < Telegram::Bot::Client
@@ -10,6 +11,10 @@ module Belpost
     def initialize
       super Belpost::Config.instance.options['tg_token']
     end
+  end
+
+  def self.telegram
+    Belpost::Tlg.instance
   end
 
   # Exception with message, sent to chat
