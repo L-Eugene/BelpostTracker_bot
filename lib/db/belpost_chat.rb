@@ -81,6 +81,7 @@ module Belpost
 
     def print_error(e)
       log.error e.message
+      update!(enabled: false) if e.message.include? 'was blocked by the user'
     end
   end
 end
