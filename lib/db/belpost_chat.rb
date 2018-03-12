@@ -20,6 +20,17 @@ module Belpost
       tracks.size >= TRACK_LIMIT
     end
 
+    def show_track(message, track)
+      Belpost.telegram.api.edit_message_text(
+        chat_id: chat_id,
+        message_id: message,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
+        text: track_brief(track),
+        reply_markup: track_keyboard(track)
+      )
+    end
+
     def send_text(text, parse_mode = 'Markdown', kbd = nil)
       Belpost.telegram.api.send_message(
         chat_id: chat_id,
@@ -30,6 +41,13 @@ module Belpost
       )
     rescue StandardError
       print_error $ERROR_INFO
+    end
+
+    def delete_message(message)
+      Belpost.telegram.api.delete_message(
+        chat_id: chat_id,
+        message_id: message
+      )
     end
 
     def add(track, comment = '')
@@ -64,6 +82,23 @@ module Belpost
       comment = links.where(track_id: t.id, chat_id: id).take.comment
       comment = "(#{comment.slice(0, 15)})" unless comment.empty?
       [{ text: "#{t.number} #{comment}", callback_data: "show #{t.number}" }]
+    end
+
+    def track_keyboard(t)
+      kbd = Telegram::Bot::Types::InlineKeyboardMarkup.new
+      kbd.inline_keyboard = [
+        [{ text: 'Удалить', callback_data: "delete #{t}" }],
+        [{ text: 'Назад', callback_data: 'list' }]
+      ]
+      kbd
+    end
+
+    def track_brief(t)
+      track = Belpost::Track.find_by(number: t)
+      comment = links.where(track_id: track.id, chat_id: id).take.comment
+      comment = "\n(#{comment})" unless comment.empty?
+      last_three = track.message.split("\n")[-3, 3].join("\n")
+      "<b>#{t}</b>#{comment}\n\n#{last_three}"
     end
 
     def watching?(track)

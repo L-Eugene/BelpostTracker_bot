@@ -43,7 +43,10 @@ class BelpostTrackerBot
   end
 
   def update_cq(cq)
-    Belpost.log.debug "Callback_query: #{cq.data} #{cq.message.chat.id}"
+    @chat = Belpost::Chat.find_or_create_by(chat_id: cq.message.chat.id)
+
+    meth = method_from_message(cq.data, 'callback')
+    send(meth, cq) if respond_to? meth.to_sym, true
   end
 
   def update(data)
@@ -78,14 +81,14 @@ class BelpostTrackerBot
     end
   end
 
-  def method_from_message(text)
+  def method_from_message(text, prefix = 'cmd')
     meth = (text || '').downcase.tr('_', ' ')
     [%r{\@.*$}, %r{\s.*$}, %r{^/}].each { |x| meth.gsub!(x, '') }
 
     Belpost.log.info "#{meth} command from #{chat.chat_id}"
     Belpost.log.debug "Full command is #{text}"
 
-    "cmd_#{meth}"
+    "#{prefix}_#{meth}"
   end
 
   def cmd_add(text)
@@ -98,12 +101,12 @@ class BelpostTrackerBot
     log_exception $ERROR_INFO
   end
 
-  def cmd_delete(text)
+  def cmd_delete(text, quiet = false)
     num = text.gsub(%r{/delete\s*}, '')
     track = Belpost::Track.find_by(number: num)
 
     chat.unwatch track
-    chat.send_text 'Трек-номер удален из списка наблюдаемых'
+    chat.send_text 'Трек-номер удален из списка наблюдаемых' unless quiet
   rescue StandardError
     log_exception $ERROR_INFO
   end
@@ -114,6 +117,21 @@ class BelpostTrackerBot
 
   def cmd_help(_)
     chat.send_text HELP_MESSAGE
+  end
+
+  def callback_show(query)
+    chat.show_track(query.message.message_id, query.data.gsub(%r{show\s+}, ''))
+  end
+
+  def callback_list(query)
+    chat.delete_message(query.message.message_id)
+    cmd_list(query.data)
+  end
+
+  def callback_delete(query)
+    cmd_delete("/#{query.data}", true)
+    chat.delete_message(query.message.message_id)
+    cmd_list(query.data)
   end
 
   def log_exception(error)

@@ -46,7 +46,7 @@ module Belpost
         place = cleanup tr.css('td[3]'), true
         date.gsub!(%r{(\d{2})\.(\d{2})\.(\d{4})}, '\3-\2-\1')
         "<b>#{date}</b>: #{status} <i>#{place}</i>"
-      end.sort.join "\n"
+      end.compact.sort.join "\n"
     end
 
     def cleanup(object, brackets = false)
