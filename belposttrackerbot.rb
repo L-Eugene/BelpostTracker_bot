@@ -79,7 +79,7 @@ class BelpostTrackerBot
   end
 
   def method_from_message(text)
-    meth = (text || '').downcase
+    meth = (text || '').downcase.tr('_', ' ')
     [%r{\@.*$}, %r{\s.*$}, %r{^/}].each { |x| meth.gsub!(x, '') }
 
     Belpost.log.info "#{meth} command from #{chat.chat_id}"
@@ -89,7 +89,7 @@ class BelpostTrackerBot
   end
 
   def cmd_add(text)
-    num = text.gsub(%r{/add\s*}, '').split(%r{\s})
+    num = text.gsub(%r{/add[\s_]*}, '').split(%r{\s})
     track = Belpost::Track.find_or_create_by(number: num.shift)
 
     chat.add track, num.join(' ')
@@ -128,7 +128,7 @@ class BelpostTrackerBot
       t.chats.each do |c|
         msg = <<~MSG
           #{t.number} was not updated for too long, removing it from watchlist
-          If you still want to watch it, add it again with /add #{t.number}
+          If you still want to watch it, add it again with /add_#{t.number}
         MSG
         c.send_text msg if c.enabled?
       end
