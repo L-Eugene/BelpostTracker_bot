@@ -65,10 +65,10 @@ class BelpostTrackerBot
   private
 
   HELP_MESSAGE = <<~TEXT
-    */help* - print this help message
-    */list* - list tracknumbers watched in this chat
-    */add* _track_ _comment_ - add tracknumber to watchlist
-    */delete* _track_ - delete tracknumber from watchlist
+    */help* - Вывести это сообщение
+    */list* - Список наблюдаемых в этом чате трек-номеров
+    */add* _track_ _comment_ - Добавить трек-номер в список наблюдаемых
+    */delete* _track_ - Удалить трек-номер из списка наблюдаемых
   TEXT
 
   def update_tracks
@@ -93,7 +93,7 @@ class BelpostTrackerBot
     track = Belpost::Track.find_or_create_by(number: num.shift)
 
     chat.add track, num.join(' ')
-    chat.send_text 'Added track to this chat list'
+    chat.send_text 'Трек-номер добавлен в список наблюдаемых'
   rescue StandardError
     log_exception $ERROR_INFO
   end
@@ -103,7 +103,7 @@ class BelpostTrackerBot
     track = Belpost::Track.find_by(number: num)
 
     chat.unwatch track
-    chat.send_text 'Removed track number from watch list'
+    chat.send_text 'Трек-номер удален из списка наблюдаемых'
   rescue StandardError
     log_exception $ERROR_INFO
   end
@@ -119,18 +119,17 @@ class BelpostTrackerBot
   def log_exception(error)
     Belpost.log.error error
     respond = error.respond_to? 'to_chat'
-    chat.send_text respond ? error.to_chat : 'Invalid track number'
+    chat.send_text respond ? error.to_chat : 'Некорректный трек-номер'
   end
 
   def drop_old_tracks
     cond = 'updated_at < DATE_SUB(NOW(), INTERVAL 4 MONTH)'
     Belpost::Track.where(cond).find_each do |t|
-      t.chats.each do |c|
-        msg = <<~MSG
-          #{t.number} was not updated for too long, removing it from watchlist
-          If you still want to watch it, add it again with /add_#{t.number}
+      t.chats.where(enabled: true).each do |c|
+        c.send_text <<~MSG
+          Номер #{t.number} давно не обновлялся, удаляю из списка наблюдения
+          Если Вы хотите продолжить наблюдать за этим номером, добавьте его с помощью команды /add_#{t.number}
         MSG
-        c.send_text msg if c.enabled?
       end
       t.destroy
     end

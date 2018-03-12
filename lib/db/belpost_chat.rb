@@ -33,8 +33,8 @@ module Belpost
     end
 
     def add(track, comment = '')
-      raise Belpost::Error, 'Already tracking this number' if watching? track
-      raise Belpost::Error, 'Tracknumber limit reached' if full?
+      raise Belpost::Error, 'Этот номер уже есть в списке' if watching? track
+      raise Belpost::Error, 'Список трек-номеров переполнен' if full?
 
       tracks << track
       links.where(track_id: track.id, chat_id: id)
@@ -43,7 +43,7 @@ module Belpost
     end
 
     def unwatch(track)
-      raise Belpost::Error, 'This number is not watched' unless watching? track
+      raise Belpost::Error, 'Такого номера нет в списке' unless watching? track
 
       tracks.delete track
     end
@@ -55,7 +55,7 @@ module Belpost
     end
 
     def status
-      "<b>Status</b>: #{enabled? ? 'enabled' : 'disabled'}"
+      "<b>Статус</b>: #{enabled? ? 'включен' : 'выключен'}"
     end
 
     private
