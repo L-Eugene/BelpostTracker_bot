@@ -97,7 +97,7 @@ module Belpost
       track = Belpost::Track.find_by(number: t)
       comment = links.where(track_id: track.id, chat_id: id).take.comment
       comment = "\n(#{comment})" unless comment.empty?
-      last_three = track.message.split("\n")[-3, 3].join("\n")
+      last_three = track.message&.split("\n")&.drop(1)&.last(3)&.join("\n")
       "<b>#{t}</b>#{comment}\n\n#{last_three}"
     end
 
