@@ -32,10 +32,11 @@ module Belpost
 
     def load_message
       url = "https://webservices.belpost.by/searchRu/#{number}"
-      self.message = <<~TEXT
-        <b>#{number}</b>
-        #{parse Faraday.get(url).body}
-      TEXT
+
+      data = parse Faraday.get(url).body
+      return if data.empty?
+
+      self.message = "<b>#{number}</b>\n#{data}"
     end
 
     def chat_message(chat)
@@ -44,7 +45,6 @@ module Belpost
 
       link = links.where(chat: chat).first
       result[0] = "#{result[0]} #{link.present? ? "(#{link.comment})" : ''}"
-      p result
       result.join("\n")
     end
 
