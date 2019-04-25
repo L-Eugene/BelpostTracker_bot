@@ -23,7 +23,7 @@ module Belpost
 
       chats.where(enabled: true).each do |c|
         Belpost.log.info " +++ Sending to #{c.chat_id}"
-        c.send_text(message, 'HTML')
+        c.send_text(chat_message(c), 'HTML')
       end
       save
     end
@@ -32,7 +32,20 @@ module Belpost
 
     def load_message
       url = "https://webservices.belpost.by/searchRu/#{number}"
-      self.message = "<b>#{number}</b>\n#{parse Faraday.get(url).body}"
+      self.message = <<~TEXT
+        <b>#{number}</b>
+        #{parse Faraday.get(url).body}
+      TEXT
+    end
+
+    def chat_message(chat)
+      result = message.split("\n")
+      return '' if result.empty?
+
+      link = links.where(chat: chat).first
+      result[0] = "#{result[0]} #{link.present? ? "(#{link.comment})" : ''}"
+      p result
+      result.join("\n")
     end
 
     def calc_md5

@@ -48,6 +48,8 @@ module Belpost
         chat_id: chat_id,
         message_id: message
       )
+    rescue Telegram::Bot::Excetions::Base
+      print_error $ERROR_INFO
     end
 
     def add(track, comment = '')
