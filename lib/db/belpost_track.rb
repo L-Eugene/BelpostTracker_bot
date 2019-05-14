@@ -17,7 +17,7 @@ module Belpost
 
     def refresh
       load_message
-      calc_md5
+      calc_md5 if message
 
       return unless changed?
 
