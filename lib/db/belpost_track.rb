@@ -44,7 +44,7 @@ module Belpost
       return '' if result.empty?
 
       link = links.where(chat: chat).first
-      result[0] = "#{result[0]} (#{link.comment})" if link.try(:comment)
+      result[0] = "#{result[0]} (#{link.comment})" if link&.comment&.present?
       result.join("\n")
     end
 
