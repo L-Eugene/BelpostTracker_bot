@@ -93,7 +93,7 @@ class BelpostTrackerBot
 
   def cmd_add(text)
     num = text.gsub(%r{/add[\s_]*}, '').split(%r{\s})
-    track = Belpost::Track.find_or_create_by(number: num.shift)
+    track = Belpost::Track.find_or_create_by(number: num.shift.upcase)
 
     chat.add track, num.join(' ')
     chat.send_text 'Трек-номер добавлен в список наблюдаемых'
