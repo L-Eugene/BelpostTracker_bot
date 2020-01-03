@@ -42,11 +42,11 @@ class BelpostTrackerBot
     send(meth, message.text) if respond_to? meth.to_sym, true
   end
 
-  def update_cq(cq)
-    @chat = Belpost::Chat.find_or_create_by(chat_id: cq.message.chat.id)
+  def update_cq(cbq)
+    @chat = Belpost::Chat.find_or_create_by(chat_id: cbq.message.chat.id)
 
-    meth = method_from_message(cq.data, 'callback')
-    send(meth, cq) if respond_to? meth.to_sym, true
+    meth = method_from_message(cbq.data, 'callback')
+    send(meth, cbq) if respond_to? meth.to_sym, true
   end
 
   def update(data)

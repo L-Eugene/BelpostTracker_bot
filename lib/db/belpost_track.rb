@@ -55,6 +55,7 @@ module Belpost
     def parse(html)
       Nokogiri::HTML(html).css('#Panel2 table tr').map do |tr|
         next if (date = tr.css('td[1]').text).empty?
+
         status = cleanup tr.css('td[2]')
         place = cleanup tr.css('td[3]'), true
         date.gsub!(%r{(\d{2})\.(\d{2})\.(\d{4})}, '\3-\2-\1')

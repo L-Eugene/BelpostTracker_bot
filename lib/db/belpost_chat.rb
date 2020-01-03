@@ -80,23 +80,28 @@ module Belpost
 
     private
 
-    def list_button(t)
-      comment = links.where(track_id: t.id, chat_id: id).take.comment
+    def list_button(track)
+      comment = links.where(track_id: track.id, chat_id: id).take.comment
       comment = "(#{comment.slice(0, 15)})" unless comment.empty?
-      [{ text: "#{t.number} #{comment}", callback_data: "show #{t.number}" }]
+      [
+        {
+          text: "#{track.number} #{comment}",
+          callback_data: "show #{track.number}"
+        }
+      ]
     end
 
-    def track_keyboard(t)
+    def track_keyboard(tnum)
       kbd = Telegram::Bot::Types::InlineKeyboardMarkup.new
       kbd.inline_keyboard = [
-        [{ text: 'Удалить', callback_data: "delete #{t}" }],
+        [{ text: 'Удалить', callback_data: "delete #{tnum}" }],
         [{ text: 'Назад', callback_data: 'list' }]
       ]
       kbd
     end
 
-    def track_brief(t)
-      track = Belpost::Track.find_by(number: t)
+    def track_brief(tnum)
+      track = Belpost::Track.find_by(number: tnum)
       comment = links.where(track_id: track.id, chat_id: id).take.comment
       comment = "\n(#{comment})" unless comment.empty?
       last_three = track.message&.split("\n")&.drop(1)&.last(3)&.join("\n")
@@ -105,12 +110,13 @@ module Belpost
 
     def watching?(track)
       return false if track.nil?
+
       tracks.any? { |t| t.number == track.number }
     end
 
-    def print_error(e)
-      Belpost.log.error e.message
-      update!(enabled: false) if e.message.include? 'was blocked by the user'
+    def print_error(err)
+      Belpost.log.error err.message
+      update!(enabled: false) if err.message.include? 'was blocked by the user'
     end
   end
 end
