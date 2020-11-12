@@ -9,7 +9,7 @@ module Belpost
     include Singleton
 
     def initialize
-      super Belpost::Config.instance.options['logfile'], 'daily'
+      super Belpost::Config.instance.options['logfile']
       flag = Belpost::Config.instance.options['debug']
 
       self.level = Logger::INFO
