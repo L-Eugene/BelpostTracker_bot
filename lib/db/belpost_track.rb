@@ -35,7 +35,7 @@ module Belpost
     def load_message
       conn = Faraday.new 'https://api.belpost.by/api/v1/tracking', ssl: { verify: false }
 
-      data = parse conn.post('/', number: number).body
+      data = parse conn.post('', number: number).body
       return if data.empty?
 
       self.message = "<b>#{number}</b>\n#{data}"
@@ -62,6 +62,10 @@ module Belpost
       hash[:data][:steps].map do |step|
         "<b>#{step[:created_at]}</b>: #{step[:event]} <i>#{step[:place]}</i>"
       end.reverse.join("\n")
+    rescue
+      Belpost.log.error "#{number} data is invalid:"
+      Belpost.log.error data
+      ''
     end
 
     def cleanup(object, brackets = false)
