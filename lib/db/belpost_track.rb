@@ -27,6 +27,7 @@ module Belpost
         c.send_text(chat_message(c), 'HTML')
       end
       save
+      sleep 1.minute
     end
 
     private
