@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-require 'nokogiri'
+require 'faraday'
+require 'json'
 require 'digest'
 
 module Belpost
@@ -31,11 +32,9 @@ module Belpost
     private
 
     def load_message
-      url = "https://webservices.belpost.by/searchRu/#{number}"
+      conn = Faraday.new 'https://api.belpost.by/api/v1/tracking', ssl: { verify: false }
 
-      conn = Faraday.new "https://webservices.belpost.by/searchRu/#{number}", ssl: { verify: false }
-
-      data = parse conn.get(url).body
+      data = parse conn.post('/', number: number).body
       return if data.empty?
 
       self.message = "<b>#{number}</b>\n#{data}"
@@ -54,15 +53,14 @@ module Belpost
       self.md5 = Digest::MD5.hexdigest message
     end
 
-    def parse(html)
-      Nokogiri::HTML(html).css('#Panel2 table tr').map do |tr|
-        next if (date = tr.css('td[1]').text).empty?
+    def parse(data)
+      hash = JSON.parse(data, symbolize_names: true)
 
-        status = cleanup tr.css('td[2]')
-        place = cleanup tr.css('td[3]'), true
-        date.gsub!(%r{(\d{2})\.(\d{2})\.(\d{4})}, '\3-\2-\1')
-        "<b>#{date}</b>: #{status} <i>#{place}</i>"
-      end.compact.sort.join "\n"
+      return {} unless hash.key?(:data)
+
+      hash[:data][:steps].map do |step|
+        "<b>#{step[:created_at]}</b>: #{step[:event]} <i>#{step[:place]}</i>"
+      end.reverse.join("\n")
     end
 
     def cleanup(object, brackets = false)
