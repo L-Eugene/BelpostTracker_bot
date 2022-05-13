@@ -33,7 +33,7 @@ module Belpost
     def load_message
       url = "https://webservices.belpost.by/searchRu/#{number}"
 
-      conn = Faraday.new"https://webservices.belpost.by/searchRu/#{number}", :ssl => {:verify => false}
+      conn = Faraday.new "https://webservices.belpost.by/searchRu/#{number}", ssl: { verify: false }
 
       data = parse conn.get(url).body
       return if data.empty?

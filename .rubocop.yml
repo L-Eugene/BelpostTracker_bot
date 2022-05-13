@@ -1,12 +1,14 @@
 AllCops:
   TargetRubyVersion: 2.5
+  NewCops: enable
+  SuggestExtensions: false
   Exclude:
     - 'schema.rb'
 
 Style/RegexpLiteral:
   EnforcedStyle: percent_r
 
-Metrics/LineLength:
+Layout/LineLength:
   Max: 120
 
 Metrics/ClassLength:
@@ -18,3 +20,6 @@ Metrics/AbcSize:
 Style/MixinUsage:
   Exclude:
     - 'Rakefile'
+
+Style/OptionalBooleanParameter:
+  Enabled: false

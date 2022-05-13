@@ -83,7 +83,7 @@ class BelpostTrackerBot
 
   def method_from_message(text, prefix = 'cmd')
     meth = (text || '').downcase.tr('_', ' ')
-    [%r{\@.*$}, %r{\s.*$}, %r{^/}].each { |x| meth.gsub!(x, '') }
+    [%r{@.*$}, %r{\s.*$}, %r{^/}].each { |x| meth.gsub!(x, '') }
 
     Belpost.log.info "#{meth} command from #{chat.chat_id}"
     Belpost.log.debug "Full command is #{text}"

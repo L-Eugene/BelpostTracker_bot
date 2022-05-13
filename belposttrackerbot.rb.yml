@@ -1,0 +1,17 @@
+tg_token: sometoken
+
+libdir: lib
+basedir: db
+logfile: /tmp/belposttest.log
+
+debug:
+  flag: /tmp/test_debug
+  default: true
+
+database:
+  :adapter: sqlite3
+  :encoding: utf8
+  :pool: 5
+  :min_messages: warning
+  :timeout: 5000
+  :database: db/test.sqlite3

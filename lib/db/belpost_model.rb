@@ -16,6 +16,6 @@ module Belpost
   ActiveSupport::LogSubscriber.colorize_logging = false
 end
 
-require 'db/belpost_chat.rb'
-require 'db/belpost_track.rb'
-require 'db/belpost_link.rb'
+require 'db/belpost_chat'
+require 'db/belpost_track'
+require 'db/belpost_link'

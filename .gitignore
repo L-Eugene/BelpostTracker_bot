@@ -5,3 +5,8 @@
 # /lib/
 /lib/nbproject
 /.idea/
+
+.bundle/
+schema.rb
+Gemfile.lock
+db/test.sqlite3
