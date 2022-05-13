@@ -62,8 +62,8 @@ module Belpost
       hash[:data][:steps].map do |step|
         "<b>#{step[:created_at]}</b>: #{step[:event]} <i>#{step[:place]}</i>"
       end.reverse.join("\n")
-    rescue
-      Belpost.log.error "#{number} data is invalid:"
+    rescue JSON::ParserError => e
+      Belpost.log.error "#{number} data is invalid: #{e.message}"
       Belpost.log.error data
       ''
     end
