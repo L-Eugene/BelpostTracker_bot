@@ -59,7 +59,7 @@ module Belpost
 
       return {} unless hash.key?(:data)
 
-      hash[:data][:steps].map do |step|
+      hash[:data].first[:steps].map do |step|
         "<b>#{step[:created_at]}</b>: #{step[:event]} <i>#{step[:place]}</i>"
       end.reverse.join("\n")
     rescue JSON::ParserError => e
