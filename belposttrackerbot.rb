@@ -76,8 +76,10 @@ class BelpostTrackerBot
 
   def update_tracks
     Belpost::Track.find_each do |t|
+      next unless t.watched?
+
       Belpost.log.info "Scanning #{t.number}"
-      t.refresh if t.watched?
+      t.refresh
     end
   end
 
