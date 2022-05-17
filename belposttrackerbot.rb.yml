@@ -4,9 +4,7 @@ libdir: lib
 basedir: db
 logfile: /tmp/belposttest.log
 
-debug:
-  flag: /tmp/test_debug
-  default: true
+debug: /tmp/belposttest.debug
 
 database:
   :adapter: sqlite3
