@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Migrate #1
-class CreateDatabase < ActiveRecord::Migration
+class CreateDatabase < ActiveRecord::Migration[5.0]
   def create_chats
     create_table :chats do |t|
       t.string :chat_id
