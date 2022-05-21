@@ -3,11 +3,16 @@
 require 'English'
 require 'factory_bot'
 require 'database_cleaner'
+require 'webmock/rspec'
+
+FIXTURES_PATH = "#{File.dirname(__FILE__)}/fixtures/"
 
 $LOAD_PATH.unshift("#{File.dirname(__FILE__)}/../lib/")
 $LOAD_PATH.unshift("#{File.dirname(__FILE__)}/../")
 
 require 'belposttrackerbot'
+
+WebMock.disable_net_connect!(allow_localhost: true)
 
 FactoryBot.find_definitions
 

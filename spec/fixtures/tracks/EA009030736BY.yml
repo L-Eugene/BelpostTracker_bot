@@ -1,0 +1,4 @@
+status: 422
+headers: {}
+body: >
+  {"message":"The given data was invalid.","errors":{"number":["\u041f\u043e\u043b\u0435 number \u0438\u043c\u0435\u0435\u0442 \u043e\u0448\u0438\u0431\u043e\u0447\u043d\u044b\u0439 \u0444\u043e\u0440\u043c\u0430\u0442."]}}

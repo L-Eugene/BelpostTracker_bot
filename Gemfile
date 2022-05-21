@@ -12,5 +12,6 @@ source 'https://rubygems.org' do
     gem 'rspec'
     gem 'rubocop'
     gem 'sqlite3', '~> 1.4.0'
+    gem 'webmock'
   end
 end

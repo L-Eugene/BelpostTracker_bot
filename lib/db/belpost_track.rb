@@ -36,7 +36,10 @@ module Belpost
       conn = Faraday.new 'https://api.belpost.by/api/v1/tracking', ssl: { verify: false }
 
       data = parse conn.post('', number: number).body
-      return if data.empty?
+      if data.empty?
+        self.message ||= ''
+        return
+      end
 
       self.message = "<b>#{number}</b>\n#{data}"
     end
