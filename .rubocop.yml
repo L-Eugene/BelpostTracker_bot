@@ -11,6 +11,10 @@ Style/RegexpLiteral:
 Layout/LineLength:
   Max: 120
 
+Metrics/BlockLength:
+  Exclude:
+    - Rakefile
+
 Metrics/ClassLength:
   Max: 300
 

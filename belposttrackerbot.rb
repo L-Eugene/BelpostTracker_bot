@@ -16,6 +16,10 @@ module Belpost
     def initialize
       @options = YAML.load_file(CONFIG_PATH)
     end
+
+    def self.options
+      instance.options
+    end
   end
 end
 
