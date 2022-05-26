@@ -10,3 +10,5 @@
 schema.rb
 Gemfile.lock
 db/test.sqlite3
+/.ruby-gemset
+/.ruby-version
