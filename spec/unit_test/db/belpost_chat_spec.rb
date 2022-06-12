@@ -18,8 +18,18 @@ describe Belpost::Chat do
   end
 
   describe '#add' do
-    it 'shouldn\'t raise on new track' do
+    it 'shouldn\'t raise on belpost track' do
       expect { chat.add track }.not_to raise_error
+    end
+
+    it 'shouldn\'t raise on evropochta track' do
+      expect { chat.add FactoryBot.create(:track, number: 'BY080013281922') }.not_to raise_error
+    end
+
+    it 'should raise on invalid track numbers' do
+      %w[AZ080013281922 SB07473480LV BY80013281922].each do |num|
+        expect { chat.add FactoryBot.create(:track, number: num) }.to raise_error(ActiveRecord::RecordInvalid)
+      end
     end
 
     it 'should raise on duplicate track' do

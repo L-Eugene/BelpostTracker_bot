@@ -10,7 +10,9 @@ module Belpost
     has_many :links
     has_many :chats, through: :links
 
-    validates_format_of :number, with: %r([A-Z]{2}\d{9}[A-Z]{2}), on: :create
+    BELPOST_REGEX = %r{[A-Z]{2}\d{9}[A-Z]{2}}.freeze
+    EVROPOCHTA_REGEX = %r{BY\d{12}}.freeze
+    validates_format_of :number, with: Regexp.union(BELPOST_REGEX, EVROPOCHTA_REGEX), on: :create
 
     def watched?
       chats.any?(&:enabled?)
@@ -33,15 +35,48 @@ module Belpost
     private
 
     def load_message
-      conn = Faraday.new 'https://api.belpost.by/api/v1/tracking', ssl: { verify: false }
+      data = case number
+             when BELPOST_REGEX
+               load_message_belpost
+             when EVROPOCHTA_REGEX
+               load_message_evropochta
+             end
 
-      data = parse conn.post('', number: number).body
-      if data.empty?
-        self.message ||= ''
-        return
-      end
+      return self.message ||= '' if data.empty?
 
       self.message = "<b>#{number}</b>\n#{data}"
+    end
+
+    def load_message_belpost
+      conn = Faraday.new 'https://api.belpost.by/api/v1/tracking', ssl: { verify: false }
+
+      hash = JSON.parse(conn.post('', number: number).body, symbolize_names: true)
+
+      return {} unless hash.key?(:data)
+
+      hash[:data].first[:steps].map do |step|
+        "<b>#{step[:created_at]}</b>: #{step[:event]} <i>#{step[:place]}</i>"
+      end.reverse.join("\n")
+    rescue JSON::ParserError => e
+      Belpost.log.error "#{number} data is invalid: #{e.message}"
+      Belpost.log.error data
+      ''
+    end
+
+    def load_message_evropochta
+      conn = Faraday.new 'https://evropochta.by/api/track.json/', ssl: { verify: false }
+
+      hash = JSON.parse(conn.get('', number: number).body, symbolize_names: true)
+
+      return {} unless hash.key?(:data)
+
+      hash[:data].map do |step|
+        "<b>#{step[:Timex]}</b>: #{step[:InfoTrack]}"
+      end.reverse.join("\n")
+    rescue JSON::ParserError => e
+      Belpost.log.error "#{number} data is invalid: #{e.message}"
+      Belpost.log.error data
+      ''
     end
 
     def chat_message(chat)

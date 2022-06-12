@@ -34,15 +34,31 @@ describe Belpost::Track do
             YAML.load_file(File.join(FIXTURES_PATH, 'tracks', "#{track}.yml"))
           )
       end
+
+      %w[BY080013226247].each do |track|
+        stub_request(:get, "https://evropochta.by/api/track.json/?number=#{track}")
+          .to_return(
+            YAML.load_file(File.join(FIXTURES_PATH, 'tracks', "#{track}.yml"))
+          )
+      end
     end
 
-    it 'should receive data for valid track' do
+    it 'should receive data for belpost track' do
       track = FactoryBot.create :track, number: 'EA009030735BY'
       expect { track.__send__(:load_message) }.not_to raise_error
 
       expect(track.message.split("\n").size).to eq 12
       expect(track.message.split("\n").first).to eq '<b>EA009030735BY</b>'
       expect(track.message.split("\n").last).to include '14:19:00'
+    end
+
+    it 'should receive data for evropochta track' do
+      track = FactoryBot.create :track, number: 'BY080013226247'
+      expect { track.__send__(:load_message) }.not_to raise_error
+
+      expect(track.message.split("\n").size).to eq 10
+      expect(track.message.split("\n").first).to eq '<b>BY080013226247</b>'
+      expect(track.message.split("\n").last).to include '20:28:47'
     end
 
     it 'should process error response from server' do
