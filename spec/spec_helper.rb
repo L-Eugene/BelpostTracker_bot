@@ -70,6 +70,8 @@ RSpec.configure do |config|
   end
 
   config.before(:each) do
+    # ENV var to avoid sleeps in API requests
+    ENV['DO_NOT_SLEEP'] = 'true'
     DatabaseCleaner.clean
   end
 
