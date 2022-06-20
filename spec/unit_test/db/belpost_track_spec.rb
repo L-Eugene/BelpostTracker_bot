@@ -68,4 +68,40 @@ describe Belpost::Track do
       expect(track.message).to be_empty
     end
   end
+
+  describe '#find_or_create_by_number' do
+    let(:old_tracks) { %w[EA009030736BY BY080013226247] }
+    let(:new_tracks) { %w[EA009030737BY BY080013226248] }
+    let(:bad_tracks) { %w[EA0090030737BY AZ080013226248] }
+
+    before :each do
+      old_tracks.each { |num| FactoryBot.create :track, number: num }
+    end
+
+    it 'should not create new track for existing number' do
+      old_tracks.each do |num|
+        track = Belpost::Track.find_or_create_by_number(num)
+        expect(track).to be_a(Belpost::Track)
+        expect(Belpost::Track.all.size).to eq old_tracks.size
+      end
+    end
+
+    it 'should create new objects' do
+      new_tracks.each_with_index do |num, i|
+        track = Belpost::Track.find_or_create_by_number(num)
+        expect(track).to be_a(Belpost::Track)
+        expect(track.persisted?).to be_truthy
+        expect(track.errors).to be_empty
+        expect(Belpost::Track.all.size).to eq old_tracks.size + i + 1
+      end
+    end
+
+    it 'should raise an exception for invalid tracks' do
+      bad_tracks.each do |num|
+        track = Belpost::Track.find_or_create_by_number(num)
+        expect(track.persisted?).to be_falsey
+        expect(track.errors).not_to be_empty
+      end
+    end
+  end
 end

@@ -10,12 +10,24 @@ module Belpost
     has_many :links
     has_many :chats, through: :links
 
-    BELPOST_REGEX = %r{[A-Z]{2}\d{9}[A-Z]{2}}.freeze
-    EVROPOCHTA_REGEX = %r{BY\d{12}}.freeze
-    validates_format_of :number, with: Regexp.union(BELPOST_REGEX, EVROPOCHTA_REGEX), on: :create
+    validate do |track|
+      next unless track.type.nil? ||
+                  !track.type.constantize.const_defined?(:REGEX) ||
+                  !track.type.constantize::REGEX.match?(track.number)
+
+      errors.add(:number, 'does not match any supported type')
+    end
 
     def watched?
       chats.any?(&:enabled?)
+    end
+
+    def self.find_or_create_by_number(number)
+      result = find_by_number(number)
+      return result if result
+
+      klass = Belpost::Track.descendants.detect { |k| k::REGEX === number } || Belpost::Track
+      klass.create(number: number)
     end
 
     def refresh
@@ -29,54 +41,20 @@ module Belpost
         c.send_text(chat_message(c), 'HTML')
       end
       save
-      sleep 1.minute
     end
 
     private
 
+    def api_get
+      raise 'Should be defined in subclass'
+    end
+
     def load_message
-      data = case number
-             when BELPOST_REGEX
-               load_message_belpost
-             when EVROPOCHTA_REGEX
-               load_message_evropochta
-             end
+      data = api_get
 
       return self.message ||= '' if data.empty?
 
       self.message = "<b>#{number}</b>\n#{data}"
-    end
-
-    def load_message_belpost
-      conn = Faraday.new 'https://api.belpost.by/api/v1/tracking', ssl: { verify: false }
-
-      hash = JSON.parse(conn.post('', number: number).body, symbolize_names: true)
-
-      return {} unless hash.key?(:data)
-
-      hash[:data].first[:steps].map do |step|
-        "<b>#{step[:created_at]}</b>: #{step[:event]} <i>#{step[:place]}</i>"
-      end.reverse.join("\n")
-    rescue JSON::ParserError => e
-      Belpost.log.error "#{number} data is invalid: #{e.message}"
-      Belpost.log.error data
-      ''
-    end
-
-    def load_message_evropochta
-      conn = Faraday.new 'https://evropochta.by/api/track.json/', ssl: { verify: false }
-
-      hash = JSON.parse(conn.get('', number: number).body, symbolize_names: true)
-
-      return {} unless hash.key?(:data)
-
-      hash[:data].map do |step|
-        "<b>#{step[:Timex]}</b>: #{step[:InfoTrack]}"
-      end.reverse.join("\n")
-    rescue JSON::ParserError => e
-      Belpost.log.error "#{number} data is invalid: #{e.message}"
-      Belpost.log.error data
-      ''
     end
 
     def chat_message(chat)
@@ -92,23 +70,12 @@ module Belpost
       self.md5 = Digest::MD5.hexdigest message
     end
 
-    def parse(data)
-      hash = JSON.parse(data, symbolize_names: true)
-
-      return {} unless hash.key?(:data)
-
-      hash[:data].first[:steps].map do |step|
-        "<b>#{step[:created_at]}</b>: #{step[:event]} <i>#{step[:place]}</i>"
-      end.reverse.join("\n")
-    rescue JSON::ParserError => e
-      Belpost.log.error "#{number} data is invalid: #{e.message}"
-      Belpost.log.error data
-      ''
-    end
-
     def cleanup(object, brackets = false)
       result = object.text.gsub(%r{^\s*}, '').gsub(%r{\s*$}, '')
       brackets && !result.empty? ? "(#{result})" : result
     end
   end
 end
+
+require 'db/belpost_evropochta_track'
+require 'db/belpost_post_track'

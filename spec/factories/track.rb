@@ -11,5 +11,15 @@ FactoryBot.define do
         2.times { str << [*'A'..'Z'].sample }
       end
     end
+
+    type do
+      klass = Belpost::Track.descendants.detect { |k| k::REGEX === number }
+      klass ? klass.to_s : klass
+    end
+
+    initialize_with do
+      klass = (type || 'Belpost::Track').constantize
+      klass.new(attributes)
+    end
   end
 end
