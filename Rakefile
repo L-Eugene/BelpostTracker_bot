@@ -2,11 +2,19 @@
 
 require_relative './belposttrackerbot'
 
-require 'rubocop/rake_task'
-require 'rspec/core/rake_task'
+# Rubocop is only installed in dev environment
+begin
+  require 'rubocop/rake_task'
+  RuboCop::RakeTask.new
+rescue LoadError
+end
 
-RuboCop::RakeTask.new
-RSpec::Core::RakeTask.new
+# RSpec is only installed in dev environment
+begin
+  require 'rspec/core/rake_task'
+  RSpec::Core::RakeTask.new
+rescue LoadError
+end
 
 namespace :belpost do
   namespace :db do
