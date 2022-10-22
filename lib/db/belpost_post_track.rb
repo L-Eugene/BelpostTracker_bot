@@ -7,6 +7,7 @@ module Belpost
 
     validates_format_of :number, with: REGEX, on: :create
 
+    # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
     def api_get
       conn = Faraday.new 'https://api.belpost.by/api/v1/tracking', ssl: { verify: false }
 
@@ -15,6 +16,9 @@ module Belpost
       (hash[:data] || [{ steps: [] }]).first[:steps].map do |step|
         "<b>#{step[:created_at]}</b>: #{step[:event]} <i>#{step[:place]}</i>"
       end.reverse.join("\n")
+    rescue Faraday::ConnectionFailed => e
+      Belpost.log.error "Unable to set up API connection. #{e.message}"
+      ''
     rescue JSON::ParserError => e
       Belpost.log.error "#{number} data is invalid: #{e.message}\n#{data}"
       ''
@@ -23,4 +27,5 @@ module Belpost
       sleep 1.minute unless ENV.key?('DO_NOT_SLEEP')
     end
   end
+  # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 end
